@@ -1,4 +1,4 @@
-const { uploadFile, uploadMultipleFiles } = require('../controllers/uploadController')
+const { uploadFile, uploadMultipleFiles } = require('../controllers/files/uploadController')
 const upload = require("../middlewares/uploadMiddleware");
 const uploadRouter = require("express").Router();
 

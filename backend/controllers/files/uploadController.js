@@ -1,5 +1,4 @@
-const { addImageJob, addVideoJob } = require("../queues/fileQueue");
-const File = require("../models/File");
+const { addImageJob, addVideoJob } = require("../../queues/fileQueue");
 
 const uploadFile = async (req, res) => {
     try {
@@ -10,8 +9,9 @@ const uploadFile = async (req, res) => {
         const mimeType = req.file.mimetype;
 
         if (mimeType.startsWith("image")) {
+            // Add the image job to the queue
             await addImageJob({
-                buffer: req.file.buffer.toString("base64"),
+                buffer: req.file.buffer.toString("base64"), // Serialize buffer
                 originalname: req.file.originalname,
                 mimetype: req.file.mimetype,
                 size: req.file.size,
@@ -23,8 +23,9 @@ const uploadFile = async (req, res) => {
         }
 
         if (mimeType.startsWith("video")) {
+            // Add the video job to the queue
             await addVideoJob({
-                buffer: req.file.buffer.toString("base64"),
+                buffer: req.file.buffer.toString("base64"), // Serialize buffer
                 originalname: req.file.originalname,
                 mimetype: req.file.mimetype,
                 size: req.file.size,
@@ -42,21 +43,20 @@ const uploadFile = async (req, res) => {
     }
 };
 
-
 const uploadMultipleFiles = async (req, res) => {
     try {
         if (!req.files || (!req.files.images && !req.files.videos)) {
             return res.status(400).json({ message: "No files uploaded" });
         }
 
-        const queuedJobs = []; // Track all queued jobs for response
+        const queuedJobs = [];
 
         // Queue image jobs
         if (req.files.images) {
             req.files.images.forEach((image) => {
                 queuedJobs.push(
                     addImageJob({
-                        buffer: image.buffer.toString("base64"),
+                        buffer: image.buffer.toString("base64"), // Serialize buffer
                         originalname: image.originalname,
                         mimetype: image.mimetype,
                         size: image.size,
@@ -70,7 +70,7 @@ const uploadMultipleFiles = async (req, res) => {
             req.files.videos.forEach((video) => {
                 queuedJobs.push(
                     addVideoJob({
-                        buffer: video.buffer.toString("base64"),
+                        buffer: video.buffer.toString("base64"), // Serialize buffer
                         originalname: video.originalname,
                         mimetype: video.mimetype,
                         size: video.size,
@@ -79,7 +79,7 @@ const uploadMultipleFiles = async (req, res) => {
             });
         }
 
-        // Respond once all jobs are queued
+        // Wait for all jobs to be queued
         await Promise.all(queuedJobs);
 
         res.status(202).json({
